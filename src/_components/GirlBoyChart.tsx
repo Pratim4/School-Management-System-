@@ -49,14 +49,14 @@ function GirlBoyChart() {
         <div className='flex justify-center gap-16'>
             <div className=' flex flex-col gap-1'>
                 <div className='w-5 h-5 bg-[var(--male)] rounded-full'> </div>
-                    <p className='font-bold'>1,234</p>
+                    <p className='font-bold'>410</p>
                     <h2 className='text-xs text-gray-400'>Boys [41%]</h2>
 
                
             </div>
             <div className=' flex flex-col gap-1'>
                 <div className='w-5 h-5 bg-[var(--female)] rounded-full'> </div>
-                    <p className='font-bold'>1,234</p>
+                    <p className='font-bold'>590</p>
                     <h2 className='text-xs text-gray-400'>Girls [59%]</h2>
 
                

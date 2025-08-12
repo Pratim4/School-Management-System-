@@ -1,4 +1,7 @@
+import Announcement from '@/_components/Announcement'
 import AttendanceChart from '@/_components/AttendanceChart'
+import MyCalendar from '@/_components/Calendar'
+import FinanceChart from '@/_components/FinanceChart'
 import GirlBoyChart from '@/_components/GirlBoyChart'
 import UserCard from '@/_components/UserCard'
 import React from 'react'
@@ -18,17 +21,20 @@ function AdminPage() {
 <GirlBoyChart/>
 
   </div>
-  <div  className='w-full lg:w-1/3 h-[450px]'>
+  <div  className='w-full lg:w-2/3 h-[450px]'>
     <AttendanceChart/>
   </div>
 
 </div>
-<div>
-  bottom
+<div className='w-full h-[500px]'>
+  <FinanceChart/>
 </div>
 
 </div>
-<div className='w-full lg:w-1/3'></div>
+<div className='w-full lg:w-1/3 flex flex-col gap-8'>
+<MyCalendar/>
+<Announcement/>
+</div>
     </div>
   )
 }

@@ -15,13 +15,16 @@ export default function DashboardLayout({
           <Link href='/' className="flex items-center justify-center lg:justify-start gap-2">
 
           <Image src='/logo.png' alt="logo" width={32} height={32}/>
-          <span className="hidden lg:block xl:block"  >SS Education</span>
+          <span className="hidden lg:block xl:block font-bold text-gray-800"  >SS Education</span>
           </Link>
           <MenuItems/>
         </div>
-        <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#f7f8fa] ">
+        <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#f7f8fa] overflow-scroll flex flex-col ">
           <Navbar/>
-        {children}
+          <div className="h-[90%]  overflow-y-scroll scrollbar-hide scroll-smooth flex-1">
+                  {children}
+
+          </div>
         </div>
       </div>
 
