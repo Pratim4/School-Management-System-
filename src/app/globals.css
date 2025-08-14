@@ -12,6 +12,7 @@ body{
   height: 100%;
   width: 100%;
   overflow: hidden;
+
 }
 
 
@@ -86,3 +87,5 @@ padding: 0px 20px !important;
 .rbc-time-content::-webkit-scrollbar {
   display: none;
 }
+
+

@@ -1,3 +1,4 @@
+import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
@@ -84,15 +85,12 @@ function EventList() {
      
       <td>
         <div className="flex items-center gap-2">
-          <Link href={`/list/students/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center cursor-pointer">
-              <Image src="/edit.png" alt="" height={16} width={16} />
-            </button>
-          </Link>
           {role === "admin" && (
-            <button className="w-7 h-7 flex items-center justify-center cursor-pointer">
-              <Image src="/delete.png" alt="" height={16} width={16} />
-            </button>
+            <>
+          <Form table="class" type="update" data={item} />
+
+            <Form table="class" type="delete" id={item.id} />
+            </>
           )}
         </div>
       </td>
@@ -113,9 +111,7 @@ function EventList() {
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9d30d] cursor-pointer">
-                <Image src="/plus.png" alt="" width={14} height={14} />
-              </button>
+           <Form table="event" type="create"  />
             )}
           </div>
         </div>
