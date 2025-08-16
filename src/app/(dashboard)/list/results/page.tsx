@@ -2,114 +2,25 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import { classesData, examsData, resultsData, role,  subjectsData  } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
+import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
-import { title } from "process";
 import React from "react";
 
 type ResultList = {
-    id: number;
-      title: string;
-      studentName: string;
-      studentSurname:string;
-      teacherName: string;
-      teacherSurname: string;
-      score: number;
-      className: string;
-      startTime: Date | undefined;
-}
+  id: number;
+  title: string;
+  studentName: string;
+  studentSurname: string;
+  teacherName: string;
+  teacherSurname: string;
+  score: number;
+  className: string;
+  startTime: Date | undefined;
+};
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  },
-   {
-    header: "Student",
-    accessor: "student",
-  },
-  
-   {
-    header: "Score",
-    accessor: "score",
-    className:"hidden md:table-cell"
-  },
-  
-
-  {
-      header: "Teacher",
-      accessor:"teacher",
-      className:"hidden md:table-cell"
-  
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className:"hidden md:table-cell"
-  },
-{
-    header: "Date",
-    accessor:"date",
-    className:"hidden md:table-cell"
-
-},
-  {
-    header: "Actions",
-    accessor: "actions",
-  },
-];
-
-const teacherRow = (item: ResultList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
-  >
-    <td className="flex items-center gap-4 p-4">
-    
-    {item.title}
-    </td>
-       <td >
-        {item.studentName + " " + item.studentSurname}
-
-
-    </td>
-       <td className="hidden md:table-cell">
-        {item.score}
-
-
-    </td>
-    <td className="hidden md:table-cell">
-        {item.teacherName + " " + item.teacherSurname}
-
-
-    </td>
-    <td className="hidden md:table-cell">
-        {item.className}
-
-
-    </td>
-    <td className="hidden md:table-cell">
-        {new Intl.DateTimeFormat("en-US").format(item.startTime)}
-
-
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-        <Form table="class" type="update" data={item} />
-
-          <Form table="class" type="delete" id={item.id} />
-          </>
-        )}
-      </div>
-    </td>
-  </tr>
-);
 async function ResultList({
   searchParams,
 }: {
@@ -120,65 +31,156 @@ async function ResultList({
 
   //url params conditios
 
-  const query:Prisma.ResultWhereInput = {};
+  const query: Prisma.ResultWhereInput = {};
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const currentUserId = userId;
 
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+    },
+    {
+      header: "Student",
+      accessor: "student",
+    },
+
+    {
+      header: "Score",
+      accessor: "score",
+      className: "hidden md:table-cell",
+    },
+
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" || role === "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "actions",
+          },
+        ]
+      : []),
+  ];
+
+  const teacherRow = (item: ResultList) => (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
+    >
+      <td className="flex items-center gap-4 p-4">{item.title}</td>
+      <td>{item.studentName + " " + item.studentSurname}</td>
+      <td className="hidden md:table-cell">{item.score}</td>
+      <td className="hidden md:table-cell">
+        {item.teacherName + " " + item.teacherSurname}
+      </td>
+      <td className="hidden md:table-cell">{item.className}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {(role === "admin" || role === "update") && (
+            <>
+              <Form table="class" type="update" data={item} />
+
+              <Form table="class" type="delete" id={item.id} />
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
           case "studentId":
-            query.studentId=value;
+            query.studentId = value;
             break;
-         
-            case "search":
-              query.OR = [ 
-                {exam: {title: {contains: value, mode: "insensitive"}}},
-                {student: {name: {contains: value, mode: "insensitive"}}}
-              ]
-              break;
-              default:
-                break;
+
+          case "search":
+            query.OR = [
+              { exam: { title: { contains: value, mode: "insensitive" } } },
+              { student: { name: { contains: value, mode: "insensitive" } } },
+            ];
+            break;
+          default:
+            break;
         }
       }
     }
   }
 
+switch (role) {
+  case "admin":
+    break;
+    case "teacher":
+      query.OR = [
+        {exam: {lesson:{teacherId: currentUserId!}}},
+        {assignment: {lesson:{teacherId: currentUserId!}}},
+
+      
+      ];
+    break;
+    case "student":
+      query.studentId= currentUserId!;
+    break;
+
+  default:
+    break;
+}
+
+
+
   const [dataRes, count] = await prisma.$transaction([
     prisma.result.findMany({
-      where:query,
+      where: query,
       include: {
-        student:{select:{name:true,surname:true}},
-        exam:{
+        student: { select: { name: true, surname: true } },
+        exam: {
           include: {
-            lesson:{
-              select:{
-                class: {select: { name: true }},
-                teacher: {select: { name: true, surname: true }},
+            lesson: {
+              select: {
+                class: { select: { name: true } },
+                teacher: { select: { name: true, surname: true } },
               },
             },
+          },
         },
-
-      },
-       assignment:{
+        assignment: {
           include: {
-            lesson:{
-              select:{
-                class: {select: { name: true }},
-                teacher: {select: { name: true, surname: true }},
+            lesson: {
+              select: {
+                class: { select: { name: true } },
+                teacher: { select: { name: true, surname: true } },
               },
             },
+          },
         },
-
       },
-    },
       take: ITEMS_PER_PAGE,
       skip: (p - 1) * ITEMS_PER_PAGE,
     }),
-    prisma.result.count({where: query}),
+    prisma.result.count({ where: query }),
   ]);
   const data = dataRes.map((item) => {
     const assessment = item.exam || item.assignment;
-    if(!assessment) return null;
+    if (!assessment) return null;
     const isExam = "startTime" in assessment;
 
     return {
@@ -191,8 +193,8 @@ async function ResultList({
       score: item.score,
       className: assessment.lesson.class.name,
       startTime: isExam ? assessment.startTime : undefined,
-    }
-  })
+    };
+  });
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -207,14 +209,14 @@ async function ResultList({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9d30d] cursor-pointer">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && (
-             <Form table="exam" type="create" />
+            {(role === "admin" || role === "teacher") && (
+              <Form table="exam" type="create" />
             )}
           </div>
         </div>
       </div>
       <Table columns={columns} teacherRow={teacherRow} data={data} />
-      <Pagination page={p} count={count}/>
+      <Pagination page={p} count={count} />
     </div>
   );
 }

@@ -2,17 +2,34 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import {  eventsData,  role,    } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
+import { auth } from "@clerk/nextjs/server";
 import { Class, Event, Prisma } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
 type EventList= Event & { class : Class }
 
-const columns = [
+
+async function EventList({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(page) : 1;
+
+  
+
+  const query:Prisma.EventWhereInput = {};
+
+  const {userId, sessionClaims} =await auth()
+      const role = (sessionClaims?.metadata as {role?: string })?.role;
+  const currentUserId =userId;
+
+
+  const columns = [
   {
     header: "Title ",
     accessor: "title",
@@ -41,10 +58,11 @@ const columns = [
     className:"hidden md:table-cell"
 
 },
-  {
+...(role ==="admin" 
+  ?  [{
     header: "Actions",
     accessor: "actions",
-  },
+  }]:[]),
 ];
 
 const teacherRow = (item: EventList) => (
@@ -57,7 +75,7 @@ const teacherRow = (item: EventList) => (
     {item.title}
     </td>
        <td >
-        {item.class.name}
+        {item.class?.name || "-"}
 
 
     </td>
@@ -98,17 +116,6 @@ const teacherRow = (item: EventList) => (
     </td>
   </tr>
 );
-async function EventList({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) {
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
-
-  
-
-  const query:Prisma.EventWhereInput = {};
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -124,6 +131,16 @@ async function EventList({
       }
     }
   }
+
+  const roleConditions = {
+    teacher: { lessons:{ some:{ teacherId: currentUserId!}}},
+    student: { students:{ some:{ studentId: currentUserId!}}},
+
+  }
+
+ 
+
+
 
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({

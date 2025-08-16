@@ -14,8 +14,8 @@ export default function DashboardLayout({
         <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] p-4"> 
           <Link href='/' className="flex items-center justify-center lg:justify-start gap-2">
 
-          <Image src='/logo.png' alt="logo" width={32} height={32}/>
-          <span className="hidden lg:block xl:block font-bold text-gray-800"  >SS Education</span>
+          <Image src='/logo.png' alt="logo" width={32} height={20}  className="w-auto h-[45px] "/>
+          <span className="hidden lg:block xl:block font-bold text-green-600 mt-2"  >Skill Shikshya</span>
           </Link>
           <MenuItems/>
         </div>

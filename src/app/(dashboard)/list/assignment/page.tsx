@@ -2,12 +2,11 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import { assignmentsData, classesData, examsData, role,  subjectsData  } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
+import { auth } from "@clerk/nextjs/server";
 import { Assignment, Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
 type AssignmentList = Assignment & {lesson:{
@@ -16,7 +15,27 @@ class: Class,
 teacher: Teacher
 }}
 
-const columns = [
+
+
+
+async function AssignmentList({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(page) : 1;
+  const query:Prisma.AssignmentWhereInput = {};
+
+
+  query.lesson ={};
+  const {userId, sessionClaims} =await auth()
+  const role = (sessionClaims?.metadata as {role?: string })?.role;
+  const currentUserId =userId;
+
+
+
+  const columns = [
   {
     header: "Subject Name",
     accessor: "name",
@@ -38,13 +57,14 @@ const columns = [
     className:"hidden md:table-cell"
 
 },
-  {
+  ...(role ==="admin" || role === "teacher"
+  ?  [{
     header: "Actions",
     accessor: "actions",
-  },
+  }]:[]),
 ];
 
-const teacherRow = (item: AssignmentList) => (
+  const teacherRow = (item: AssignmentList) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
@@ -70,7 +90,7 @@ const teacherRow = (item: AssignmentList) => (
     </td>
     <td>
       <div className="flex items-center gap-2">
-         {role === "admin" && (
+         {(role === "admin" || role === "teacher") && (
           <>
         <Form table="class" type="update" data={item} />
 
@@ -81,43 +101,52 @@ const teacherRow = (item: AssignmentList) => (
     </td>
   </tr>
 );
-async function AssignmentList({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) {
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
-
-  
-
-  const query:Prisma.AssignmentWhereInput = {};
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
           case "classId":
-            query.lesson={classId: parseInt(value)}
+            query.lesson.classId =  parseInt(value);
             break;
-            case "teacherId":{
-              query.lesson = {teacherId: value}
-            }
+            case "teacherId":
+              query.lesson.teacherId = value;
+              break;
+            
             case "search":
-              query.lesson = {
-                subject: {
+              query.lesson.subject = {
+                
                   name: {
                     contains: value,
                     mode: "insensitive",
                   },
-                },
-              };
+                };
+              
               break;
                default:
                 break;
         }
       }
     }
+  }
+
+  
+  switch(role ){
+    case "admin":
+      break;
+      case "teacher":
+        query.lesson.teacherId = currentUserId!;
+        break;
+        case "student":
+          query.lesson.class = {
+            students:{
+              some: {
+                id:currentUserId!,
+              }
+            }
+          }
+        default:
+        break;
   }
 
   const [data, count] = await prisma.$transaction([
@@ -151,7 +180,7 @@ async function AssignmentList({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9d30d] cursor-pointer">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && (
+            {(role === "admin"|| role==="teacher") && (
               <Form table="assignment" type="create" />
             )}
           </div>

@@ -1,4 +1,4 @@
-import { role } from "@/library/data";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -113,7 +113,9 @@ const menuItems = [
 ];
 
 
-function MenuItems() {
+async function MenuItems() {
+  const user =await currentUser();
+  const role = user?.publicMetadata.role as string;
   return (
     <div className="mt-4 text-sm h-screen overflow-scroll scrollbar-hide pb-24 scroll-smooth">
       {menuItems.map((item) =>(

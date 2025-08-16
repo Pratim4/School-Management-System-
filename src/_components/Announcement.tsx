@@ -1,6 +1,30 @@
+import prisma from '@/library/prisma'
+import { auth } from '@clerk/nextjs/server';
 import React from 'react'
 
-function Announcement() {
+async function Announcement() {
+    const {userId, sessionClaims} = await auth();
+    const role = (sessionClaims?.metadata as { role: string })?.role;
+
+    const roleConditions = {
+        teacher:{lessons:{some:{teacherId:userId!}}},
+        student:{students:{some:{id:userId!}}},
+    }
+
+    const data = await prisma.announcement.findMany({
+        take: 3,
+        orderBy: {
+            date: 'desc'
+        },
+        where:{
+            ...(role !== "admin" && {
+                 OR: [{classId: null},
+                {class:roleConditions[role as keyof typeof roleConditions] || {}}
+            ],
+            })
+           
+        }
+    })
   return (
     <div className='bg-white p-4 rounded-md'>
         <div className='flex items-center justify-between'>
@@ -10,42 +34,42 @@ function Announcement() {
             <span className='font-medium'> View All</span>
 
         </div>
-        <div className='flex flex-col gap-4 mt-4'>
+        {data[0] && <div className='flex flex-col gap-4 mt-4'>
             <div className='bg-[var(--secondary)] rounded-md p-4'>
                 <div className='flex items-center justify-between'>
-                    <h2 className='font-medium'> Lorem ipsum dolor sit amet consectetur.</h2>
-                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>2025-01-10</span>
+                    <h2 className='font-medium'>{data[0].title}</h2>
+                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>{data[0].date.toISOString().split('T')[0]}</span>
 
                 </div>
-            
-                    <p className='text-sm text-gray-500 mt-1'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nesciunt, incidunt.</p>
+
+                    <p className='text-sm text-gray-500 mt-1'>{data[0].description}</p>
                 
             </div>
-        </div>
-        <div className='flex flex-col gap-4 mt-4'>
+        </div>}
+        {data[1] &&  <div className='flex flex-col gap-4 mt-4'>
             <div className='bg-[#f57c6c55] rounded-md p-4'>
                 <div className='flex items-center justify-between'>
-                    <h2 className='font-medium'> Lorem ipsum dolor sit amet consectetur.</h2>
-                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>2025-01-10</span>
+                    <h2 className='font-medium'> {data[1].title}</h2>
+                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>{data[1].date.toISOString().split('T')[0]}</span>
 
                 </div>
-            
-                    <p className='text-sm text-gray-500 mt-1'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nesciunt, incidunt.</p>
+
+                    <p className='text-sm text-gray-500 mt-1'>{data[1].description} </p>
                 
             </div>
-        </div>
-        <div className='flex flex-col gap-4 mt-4'>
+        </div>}
+        {data[2] && <div className='flex flex-col gap-4 mt-4'>
             <div className='bg-[var(--secondary)] rounded-md p-4'>
                 <div className='flex items-center justify-between'>
-                    <h2 className='font-medium'> Lorem ipsum dolor sit amet consectetur.</h2>
-                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>2025-01-10</span>
+                    <h2 className='font-medium'> {data[2].title}</h2>
+                    <span className='text-xs text-gray-400 bg-white rounded-md px-1 py-1'>{data[2].date.toISOString().split('T')[0]}</span>
 
                 </div>
-            
-                    <p className='text-sm text-gray-500 mt-1'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nesciunt, incidunt.</p>
+
+                    <p className='text-sm text-gray-500 mt-1'>{data[2].description}</p>
                 
             </div>
-        </div>
+        </div>}
     </div>
   )
 }

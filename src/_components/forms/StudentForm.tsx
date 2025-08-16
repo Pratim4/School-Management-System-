@@ -23,6 +23,7 @@ const schema = z.object({
   sex: z.enum(["male", "female"], { message: "Sex is required" }),
   img: z.instanceof(File, { message: "Plese insert Image" }),
 });
+type Inputs = z.infer<typeof schema>;
 
 function StudentForm({
   type,
@@ -35,7 +36,7 @@ function StudentForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<Inputs>({
     resolver: zodResolver(schema),
   });
   const onSubmit = handleSubmit((data) => {

@@ -2,15 +2,34 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import {  announcementsData, eventsData,  role,    } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
+import { auth } from "@clerk/nextjs/server";
 import { Announcement, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 
+
+
+
 type AnnouncementList = Announcement & { class:Class };
+
+
+
+async function AnnouncementList({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(page) : 1;
+
+  
+
+const query:Prisma.AnnouncementWhereInput = {};
+
+  const {sessionClaims} =await auth()
+const role = (sessionClaims?.metadata as {role?: string })?.role;
 
 const columns = [
   {
@@ -30,12 +49,13 @@ const columns = [
 
 },
 
-  {
+  ...(role ==="admin" ?  [{
     header: "Actions",
     accessor: "actions",
-  },
+  }]:[]),
 ];
-const teacherRow = (item: AnnouncementList) => (
+
+  const teacherRow = (item: AnnouncementList) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
@@ -69,18 +89,6 @@ const teacherRow = (item: AnnouncementList) => (
     </td>
   </tr>
 );
-
-async function AnnouncementList({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) {
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
-
-  //url params conditios
-
-  const query:Prisma.AnnouncementWhereInput = {};
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {

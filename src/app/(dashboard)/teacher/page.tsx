@@ -1,6 +1,5 @@
 import Announcement from '@/_components/Announcement'
-import MyCalendar from '@/_components/Calendar'
-import ScheduleCalendar from '@/_components/Schedule'
+import ScalendarContainer from '@/_components/ScalendarContainer'
 import React from 'react'
 
 function TeacherPage() {
@@ -10,7 +9,7 @@ function TeacherPage() {
       <div className='w-full xl:w-2/3'>
       <div className='h-full bg-white p-4 rounded-md'>
         <h1 className='text-xl font-semibold'>Schedule</h1>
-        <ScheduleCalendar/>
+        <ScalendarContainer/>
       </div>
       </div>
       <div className='w-full xl:w-1/3 flex flex-col gap-8'>

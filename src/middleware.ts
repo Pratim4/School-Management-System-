@@ -1,6 +1,24 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { routeAccessMap } from './library/settings';
+import { NextResponse } from 'next/server';
 
-export default clerkMiddleware();
+// const isProtectedRoute = createRouteMatcher(['/admin', '/teacher'])
+const matchers = Object.keys(routeAccessMap).map(route=>({
+  matcher: createRouteMatcher([route]),
+  allowedRoles: routeAccessMap[route]
+}))
+
+export default clerkMiddleware(async (auth, req) => {
+  // if (isProtectedRoute(req)) await auth.protect()
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as {role?:string })?.role;
+
+  for(const{matcher, allowedRoles} of matchers){
+    if(matcher(req) && !allowedRoles.includes(role!)){
+      return NextResponse.redirect(new URL(`/${role}`, req.url))
+    }
+  }
+});
 
 export const config = {
   matcher: [
@@ -10,3 +28,36 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
+
+// import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+// import { routeAccessMap } from "./library/settings";
+// import { NextResponse } from "next/server";
+
+// const matchers = Object.keys(routeAccessMap).map((route) => ({
+//   matcher: createRouteMatcher([route]),
+//   allowedRoles: routeAccessMap[route],
+// }));
+
+// export default clerkMiddleware(async (auth, req) => {
+//   const { sessionClaims } = auth();
+//   const role = (sessionClaims?.metadata as { role?: string })?.role;
+
+//   // If no role found, block or redirect
+//   if (!role) {
+//     return NextResponse.redirect(new URL("/sign-in", req.url));
+//   }
+
+//   // Check each protected route
+//   for (const { matcher, allowedRoles } of matchers) {
+//     if (matcher(req) && !allowedRoles.includes(role)) {
+//       return NextResponse.redirect(new URL(`/${role}`, req.url));
+//     }
+//   }
+// });
+
+// export const config = {
+//   matcher: [
+//     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+//     "/(api|trpc)(.*)",
+//   ],
+// };

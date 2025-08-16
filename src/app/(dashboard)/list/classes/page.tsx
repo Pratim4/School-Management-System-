@@ -2,9 +2,9 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import { classesData, role,  subjectsData  } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
+import { auth } from "@clerk/nextjs/server";
 import { Class, Prisma, Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,7 +12,52 @@ import React from "react";
 
 type ClassList = Class & { teacher: Teacher[] };
 
-const columns = [
+
+
+async function ClassList({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = searchParams;
+  const p = page ? parseInt(page) : 1;
+  const {userId, sessionClaims} =await auth()
+    const role = (sessionClaims?.metadata as {role?: string })?.role;
+  
+  const teacherRow = (item: ClassList) => (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
+    >
+      <td className="flex items-center gap-4 p-4">
+      
+      {item.name}
+      </td>
+      <td className="hidden md:table-cell">
+          {item.capacity}
+  
+  
+      </td>
+      <td className="hidden md:table-cell">
+          {item.name[0]}
+  
+  
+      </td>
+      <td>
+        <div className="flex items-center gap-2">
+          {role === "admin" && (
+            <>
+          <Form table="class" type="update" data={item} />
+  
+            <Form table="class" type="delete" id={item.id} />
+            </>
+          )}
+        
+        </div>
+      </td>
+    </tr>
+  );
+  const columns = [
   {
     header: "Class Name",
     accessor: "name",
@@ -28,53 +73,12 @@ const columns = [
     className:"hidden md:table-cell"
 
 },
-  {
+ ...(role ==="admin" 
+  ?  [{
     header: "Actions",
     accessor: "actions",
-  },
+  }]:[]),
 ];
-
-const teacherRow = (item: ClassList) => (
-  <tr
-    key={item.id}
-    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
-  >
-    <td className="flex items-center gap-4 p-4">
-    
-    {item.name}
-    </td>
-    <td className="hidden md:table-cell">
-        {item.capacity}
-
-
-    </td>
-    <td className="hidden md:table-cell">
-        {item.name[0]}
-
-
-    </td>
-    <td>
-      <div className="flex items-center gap-2">
-        {role === "admin" && (
-          <>
-        <Form table="class" type="update" data={item} />
-
-          <Form table="class" type="delete" id={item.id} />
-          </>
-        )}
-      
-      </div>
-    </td>
-  </tr>
-);
-async function ClassList({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | undefined };
-}) {
-  const { page, ...queryParams } = searchParams;
-  const p = page ? parseInt(page) : 1;
-
   //url params conditios
 
   const query:Prisma.ClassWhereInput = {};
