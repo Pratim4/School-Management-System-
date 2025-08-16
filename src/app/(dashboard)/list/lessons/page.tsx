@@ -2,96 +2,70 @@ import Form from "@/_components/FormModal";
 import Pagination from "@/_components/Pagination";
 import Table from "@/_components/Table";
 import TableSearch from "@/_components/TableSearch";
-import { role, teachersData } from "@/library/data";
+import {  lessonsData, role } from "@/library/data";
 import prisma from "@/library/prisma";
 import { ITEMS_PER_PAGE } from "@/library/settings";
-import { Class, Prisma, Subject, Teacher } from "@prisma/client";
+import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
-import Link from "next/link";
-import { parse } from "path";
 import React from "react";
 
-type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
+type LessonList= Lesson & { subject: Subject }  & { class: Class} & { teacher: Teacher};
 
 const columns = [
   {
-    header: "Info",
-    accessor: "info",
+    header: "Subject Name",
+    accessor: "name",
   },
   {
-    header: "Teacher ID",
-    accessor: "teacherId",
-    className: "hidden md:table-cell",
+    header: "Class",
+    accessor: "class",
   },
-  {
-    header: "Subjects",
-    accessor: "subjects",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Classes",
-    accessor: "classes",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "hidden md:table-cell",
-  },
+{
+    header: "Teacher",
+    accessor:"teacher",
+    className:"hidden md:table-cell"
+
+},
   {
     header: "Actions",
     accessor: "actions",
   },
 ];
 
-const teacherRow = (item: TeacherList) => (
+const teacherRow = (item: LessonList) => (
   <tr
     key={item.id}
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[var(--secondary)]"
   >
     <td className="flex items-center gap-4 p-4">
-      <Image
-        src={item.img || "/noAvatar.png"}
-        alt=""
-        width={40}
-        height={40}
-        className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
-      />
-      <div className="flex flex-col">
-        <h3 className="font-semibold">{item.name}</h3>
-        <p className="text-xs text-gray-500">{item?.email}</p>
-      </div>
+    
+    {item.subject.name}
     </td>
-    <td className="hidden md:table-cell">{item.username}</td>
-    <td className="hidden md:table-cell">
-      {item.subjects.map((subject: Subject) => subject.name).join(", ")}
+    <td >
+        {item.class.name}
+
+
     </td>
     <td className="hidden md:table-cell">
-      {item.classes.map((classItem: Class) => classItem.name).join(", ")}
+        {item.teacher.name + " " + item.teacher.surname}
+
+
     </td>
-    <td className="hidden md:table-cell">{item.phone}</td>
-    <td className="hidden md:table-cell">{item.address}</td>
     <td>
       <div className="flex items-center gap-2">
-        <Link href={`/list/teacher/${item.id}`}>
-          <button className="w-7 h-7 flex items-center justify-center cursor-pointer">
-            <Image src="/view.png" alt="" height={16} width={16} />
-          </button>
-        </Link>
         {role === "admin" && (
-          <Form table="teacher" type="delete" id={Number(item.id)} />
+          <>
+        <Form table="class" type="update" data={item} />
+
+          <Form table="class" type="delete" id={item.id} />
+          </>
         )}
+      
       </div>
     </td>
   </tr>
 );
-
-async function TeacherList({
+async function LessonList({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
@@ -101,18 +75,14 @@ async function TeacherList({
 
   //url params conditios
 
-  const query:Prisma.TeacherWhereInput = {};
+  const query:Prisma.LessonWhereInput = {};
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
-          case "classId":
-            query.lesson ={
-              some: {
-                classId: parseInt(value),
-              }
-            };
+          case "studentId":
+            query.subjectId = parseInt(value);
             break;
             case "search":
               query.name = {
@@ -128,22 +98,23 @@ async function TeacherList({
   }
 
   const [data, count] = await prisma.$transaction([
-    prisma.teacher.findMany({
+    prisma.lesson.findMany({
       where:query,
       include: {
-        subjects: true,
-        classes: true,
+        subject: {select: { name: true }},
+        class: {select: { name: true }},
+        teacher: {select: { name: true, surname: true }},
       },
       take: ITEMS_PER_PAGE,
       skip: (p - 1) * ITEMS_PER_PAGE,
     }),
-    prisma.teacher.count({where: query}),
+    prisma.lesson.count({where: query}),
   ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold hidden md:block">All Teachers</h1>
+        <h1 className="text-lg font-semibold hidden md:block">All Lessons</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
@@ -153,7 +124,9 @@ async function TeacherList({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#b9d30d] cursor-pointer">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <Form table="teacher" type="create" />}
+            {role === "admin" && (
+              <Form table="class" type="create"  />
+            )}
           </div>
         </div>
       </div>
@@ -163,4 +136,4 @@ async function TeacherList({
   );
 }
 
-export default TeacherList;
+export default LessonList;

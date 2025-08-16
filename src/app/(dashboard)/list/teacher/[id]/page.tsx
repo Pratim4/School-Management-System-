@@ -3,6 +3,7 @@ import FormModal from "@/_components/FormModal";
 import Performance from "@/_components/Performance";
 import ScheduleCalendar from "@/_components/Schedule";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function TeacherDynamic() {
@@ -100,8 +101,18 @@ function TeacherDynamic() {
             <ScheduleCalendar/>
         </div>
       </div>
+      
 
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
+       <div className="bg-white p-4 rounded-md">
+            <h1 className="text-xl font-semibold">Student's links</h1>
+            <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
+                <Link className="p-3 rounded-md bg-[var(--primary)] text-white " href={`/list/classes?teacherId=${'teacher2'}`}>Teacher's Classes</Link>
+                <Link className="p-3 rounded-md bg-[var(--primary)] text-white " href={`/list/students?teacherId=${'teacher2'}`}>Teacher's Students  </Link>
+                <Link className="p-3 rounded-md bg-[var(--primary)] text-white " href={`/list/lessons?teacherId=${'teacher2'}`}>Teacher's Lessons </Link>
+                <Link className="p-3 rounded-md bg-[var(--primary)] text-white " href={`/list/assignments?teacherId=${'teacher2'}`}>Teacher's Assignments  </Link>
+            </div>
+        </div>
       <div className="bg-white p-4 rounded-md"> 
     <Performance/>
       </div>

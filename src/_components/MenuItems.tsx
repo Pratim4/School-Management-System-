@@ -15,7 +15,7 @@ const menuItems = [
       {
         icon: "/teacher.png",
         label: "Teachers",
-        href: "/list/teachers",
+        href: "/list/teacher",
         visible: ["admin", "teacher"],
       },
       {
@@ -38,6 +38,12 @@ const menuItems = [
         visible: ["admin", "teacher"],
       },
       {
+        icon: "/lesson.png",
+        label: "Lessons",
+        href: "/list/lessons",
+        visible: ["admin", "teacher"],
+      },
+      {
         icon: "/exam.png",
         label: "Exams",
         href: "/list/exams",
@@ -46,7 +52,7 @@ const menuItems = [
       {
         icon: "/assignment.png",
         label: "Assignments",
-        href: "/list/assignments",
+        href: "/list/assignment",
         visible: ["admin", "teacher", "student"],
       },
       {
